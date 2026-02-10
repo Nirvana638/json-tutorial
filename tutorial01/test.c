@@ -23,6 +23,9 @@ static int test_pass = 0;
 static void test_parse_null() {
     lept_value v;
     v.type = LEPT_FALSE;
+    printf("LEPT_NULL = %d\n", LEPT_NULL);
+    printf("lept_get_type before parse = %d\n", lept_get_type(&v));
+   
     EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "null"));
     EXPECT_EQ_INT(LEPT_NULL, lept_get_type(&v));
 }
