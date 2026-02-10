@@ -23,17 +23,6 @@ static int test_pass = 0;
 static void test_parse_null() {
     lept_value v;
     v.type = LEPT_FALSE;
-
-    // 调试打印
-    printf("=== test_parse_null ===\n");
-    printf("LEPT_NULL = %d\n", LEPT_NULL);
-    printf("v.type before parse = %d\n", v.type);
-
-    int parse_ret = lept_parse(&v, "null");
-    printf("lept_parse return = %d (LEPT_PARSE_OK = %d)\n", parse_ret, LEPT_PARSE_OK);
-    printf("v.type after parse  = %d\n", v.type);
-    printf("lept_get_type(&v)   = %d\n", lept_get_type(&v));
-
     EXPECT_EQ_INT(LEPT_PARSE_OK, parse_ret);
     EXPECT_EQ_INT(LEPT_NULL, lept_get_type(&v));
 }
