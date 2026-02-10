@@ -1,88 +1,73 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "leptjson.h"
+#include <assert.h>  /* assert() */
+#include <stdlib.h>  /* NULL */
 
-static int main_ret = 0;
-static int test_count = 0;
-static int test_pass = 0;
+#define EXPECT(c, ch)       do { assert(*c->json == (ch)); c->json++; } while(0)
 
-#define EXPECT_EQ_BASE(equality, expect, actual, format) \
-    do {\
-        test_count++;\
-        if (equality)\
-            test_pass++;\
-        else {\
-            fprintf(stderr, "%s:%d: expect: " format " actual: " format "\n", __FILE__, __LINE__, expect, actual);\
-            main_ret = 1;\
-        }\
-    } while(0)
+typedef struct {
+    const char* json;
+}lept_context;
 
-#define EXPECT_EQ_INT(expect, actual) EXPECT_EQ_BASE((expect) == (actual), expect, actual, "%d")
-
-static void test_parse_null() {
-    lept_value v;
-    v.type = LEPT_FALSE;
-    EXPECT_EQ_INT(LEPT_PARSE_OK, parse_ret);
-    EXPECT_EQ_INT(LEPT_NULL, lept_get_type(&v));
+static void lept_parse_whitespace(lept_context* c) {
+    const char *p = c->json;
+    while (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r')
+        p++;
+    c->json = p;
 }
 
-static void test_parse_true() {
-    lept_value v;
-    v.type = LEPT_FALSE;
-    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "true"));
-    EXPECT_EQ_INT(LEPT_TRUE, lept_get_type(&v));
+static int lept_parse_true(lept_context* c, lept_value* v) {
+    EXPECT(c, 't');
+    if (c->json[0] != 'r' || c->json[1] != 'u' || c->json[2] != 'e')
+        return LEPT_PARSE_INVALID_VALUE;
+    c->json += 3;
+    v->type = LEPT_TRUE;
+    return LEPT_PARSE_OK;
 }
 
-static void test_parse_false() {
-    lept_value v;
-    v.type = LEPT_FALSE;
-    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "false"));
-    EXPECT_EQ_INT(LEPT_FALSE, lept_get_type(&v));
+static int lept_parse_false(lept_context* c, lept_value* v) {
+    EXPECT(c, 'f');
+    if (c->json[0] != 'a' || c->json[1] != 'l' || c->json[2] != 's' || c->json[3] != 'e')
+        return LEPT_PARSE_INVALID_VALUE;
+    c->json += 4;
+    v->type = LEPT_FALSE;
+    return LEPT_PARSE_OK;
 }
 
-static void test_parse_expect_value() {
-    lept_value v;
-
-    v.type = LEPT_FALSE;
-    EXPECT_EQ_INT(LEPT_PARSE_EXPECT_VALUE, lept_parse(&v, ""));
-    EXPECT_EQ_INT(LEPT_NULL, lept_get_type(&v));
-
-    v.type = LEPT_FALSE;
-    EXPECT_EQ_INT(LEPT_PARSE_EXPECT_VALUE, lept_parse(&v, " "));
-    EXPECT_EQ_INT(LEPT_NULL, lept_get_type(&v));
+static int lept_parse_null(lept_context* c, lept_value* v) {
+    EXPECT(c, 'n');
+    if (c->json[0] != 'u' || c->json[1] != 'l' || c->json[2] != 'l')
+        return LEPT_PARSE_INVALID_VALUE;
+    c->json += 3;
+    v->type = LEPT_NULL;
+    return LEPT_PARSE_OK;
 }
 
-static void test_parse_invalid_value() {
-    lept_value v;
-    v.type = LEPT_FALSE;
-    EXPECT_EQ_INT(LEPT_PARSE_INVALID_VALUE, lept_parse(&v, "nul"));
-    EXPECT_EQ_INT(LEPT_NULL, lept_get_type(&v));
-
-    v.type = LEPT_FALSE;
-    EXPECT_EQ_INT(LEPT_PARSE_INVALID_VALUE, lept_parse(&v, "?"));
-    EXPECT_EQ_INT(LEPT_NULL, lept_get_type(&v));
+static int lept_parse_value(lept_context* c, lept_value* v) {
+    switch (*c->json) {
+        case 't':  return lept_parse_true(c, v);
+        case 'f':  return lept_parse_false(c, v);
+        case 'n':  return lept_parse_null(c, v);
+        case '\0': return LEPT_PARSE_EXPECT_VALUE;
+        default:   return LEPT_PARSE_INVALID_VALUE;
+    }
 }
 
-static void test_parse_root_not_singular() {
-    lept_value v;
-    v.type = LEPT_FALSE;
-    EXPECT_EQ_INT(LEPT_PARSE_ROOT_NOT_SINGULAR, lept_parse(&v, "null x"));
-    EXPECT_EQ_INT(LEPT_NULL, lept_get_type(&v));
+int lept_parse(lept_value* v, const char* json) {
+    lept_context c;
+    int ret;
+    assert(v != NULL);
+    c.json = json;
+    v->type = LEPT_NULL;
+    lept_parse_whitespace(&c);
+    if ((ret = lept_parse_value(&c, v)) == LEPT_PARSE_OK) {
+        lept_parse_whitespace(&c);
+        if (*c.json != '\0')
+            ret = LEPT_PARSE_ROOT_NOT_SINGULAR;
+    }
+    return ret;
 }
 
-static void test_parse() {
-    test_parse_null();
-    test_parse_true();
-    test_parse_false();
-    test_parse_expect_value();
-    test_parse_invalid_value();
-    test_parse_root_not_singular();
-}
-
-
-int main() {
-    test_parse();
-    printf("%d/%d (%3.2f%%) passed\n", test_pass, test_count, test_pass * 100.0 / test_count);
-    return main_ret;
+lept_type lept_get_type(const lept_value* v) {
+    assert(v != NULL);
+    return v->type;
 }
