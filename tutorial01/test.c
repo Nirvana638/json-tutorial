@@ -20,7 +20,7 @@ static int test_pass = 0;
 
 #define EXPECT_EQ_INT(expect, actual) EXPECT_EQ_BASE((expect) == (actual), expect, actual, "%d")
 
-static void test_parse_null() {
+static void test_parse_null(void) {
     lept_value v;
     v.type = LEPT_FALSE;
     EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "null"));
@@ -80,7 +80,7 @@ static void test_parse() {
     test_parse_root_not_singular();
 }
 
-int main() {
+int main(void) {
     test_parse();
     printf("%d/%d (%3.2f%%) passed\n", test_pass, test_count, test_pass * 100.0 / test_count);
     return main_ret;
