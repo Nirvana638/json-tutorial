@@ -1,16 +1,3 @@
-static void test_parse_null();
-static void test_parse_true();
-static void test_parse_false();
-static void test_parse_expect_value();
-static void test_parse_invalid_value();
-static void test_parse_root_not_singular();
-static void test_parse_whitespace();
-static void test_parse();
-
-
-
-
-
 #include "leptjson.h"
 #include <assert.h>  /* assert() */
 #include <stdlib.h>  /* NULL */
