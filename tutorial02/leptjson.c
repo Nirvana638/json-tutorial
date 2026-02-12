@@ -29,13 +29,48 @@ static int lept_parse_literal(lept_context* c, lept_value* v, const char* litera
 
 
 static int lept_parse_number(lept_context* c, lept_value* v) {
-    char* end;
-    /* \TODO validate number */
-    v->n = strtod(c->json, &end);
-    if (c->json == end)
+    char *p=c->json;
+    if (*p=='-') p++;
+    /*整数部分*/
+    if (*p=='0'){
+        p++;
+        if (*p>='0'&&*p<='9') return LEPT_PARSE_INVALID_VALUE;
+    }
+    else if (*p>='1'&&*p<='9')
+    {
+        while (*p>='0'&&*p<='9')
+            {
+                p++;
+            }
+    }
+    else
+    {
         return LEPT_PARSE_INVALID_VALUE;
-    c->json = end;
+    }
+    /*小数部分*/
+    if (*p=='.')
+    {
+        p++;
+        if (!(*p>='0'&&*p<='9')) return LEPT_PARSE_INVALID_VALUE;
+         while (*p>='0'&&*p<='9')
+            {
+                p++;
+            }
+    }
+    /*指数部分*/
+    if (*p=='e'||*p=='E')
+    {
+        p++;
+        if (*p=='+'||*p=='-') p++;
+        if (!(*p>='0'&&*p<='9') return LEPT_PARSE_INVALID_VALUE;
+        while (*p>='0'&&*p<='9')
+            {
+                p++;
+            }
+    }
+    v->n=strtod(c->json,NULL);
     v->type = LEPT_NUMBER;
+    c->json=p;
     return LEPT_PARSE_OK;
 }
 
