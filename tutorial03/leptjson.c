@@ -161,7 +161,7 @@ void lept_set_boolean(lept_value* v, int b) {
     assert(v!=NULL&&(b==0||b==1));
     lept_free(v);
     v->u.b=b;
-    v->type = LPET_BOOLEAN;
+    v->type = LEPT_BOOLEAN;
 }
 
 double lept_get_number(const lept_value* v) {
