@@ -91,12 +91,38 @@ static int lept_parse_number(lept_context* c, lept_value* v) {
 }
 
 static const char* lept_parse_hex4(const char* p, unsigned* u) {
-    /* \TODO */
+    *u = 0;
+    for (int i=0;i<4;i++)
+        {
+            unsigned* char ch=(unsigned char)*p++;
+            if (!ISHEX(ch))
+            {
+                return NULL;
+            }
+            *u=(*u<<4)|HEXTOI(ch);
+        }
     return p;
 }
 
 static void lept_encode_utf8(lept_context* c, unsigned u) {
-    /* \TODO */
+    if (u<0x80){
+        lept_context_push(c,(char)u);
+    }
+    else if (u<0x800){
+        lept_context_push(c,0xC0 | (u>>6));
+        lept_context_push(c,0x80 | (u&0x3F));
+    }
+    else if (u<0x10000){
+        lept_context_push(c,0xE0 | (u>>12));
+        lept_context_push(c,0x80 | ((u>>6)&0x3F));
+        lept_context_push(c,0x80 | (u&0x3F));
+    }
+    else {
+        lept_context_push(c,0xF0 | (u>>18));
+        lept_context_push(c,0x80 | (u>>12)&0x3F);
+        lept_context_push(c,0x80 | ((u>>6)&0x3F));
+        lept_context_push(c,0x80 | (u&0x3F));
+    }  
 }
 
 #define STRING_ERROR(ret) do { c->top = head; return ret; } while(0)
